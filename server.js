@@ -5,6 +5,9 @@ const path = require('path');
 const fs = require('fs-extra');
 const multer = require('multer');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
+globalThis.crypto = crypto;
+
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const cron = require('node-cron');
