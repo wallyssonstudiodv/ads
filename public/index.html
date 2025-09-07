@@ -865,6 +865,8 @@
             
             if (currentUser) {
                 document.getElementById('username').textContent = currentUser.username;
+                // Testar status do WhatsApp
+                setTimeout(testConnection, 1000);
             }
         }
 
@@ -906,22 +908,37 @@
             socket.emit('join-user', currentUser.id);
             
             socket.on('qr-code', (qr) => {
+                console.log('QR Code recebido');
                 showQRCode(qr);
             });
             
             socket.on('whatsapp-connected', () => {
+                console.log('WhatsApp conectado via socket');
                 updateWhatsAppStatus(true);
-                loadGroups();
+                setTimeout(() => {
+                    loadGroups();
+                }, 2000); // Aguardar um pouco antes de carregar grupos
             });
             
             socket.on('whatsapp-disconnected', () => {
+                console.log('WhatsApp desconectado via socket');
                 updateWhatsAppStatus(false);
+                groups = []; // Limpar grupos
+                updateGroupsSelect();
             });
             
             socket.on('ad-broadcast-result', (data) => {
                 showNotification(`Anúncio enviado: ${data.results.sent} sucessos, ${data.results.failed} falhas`, 'success');
                 loadStats();
                 loadAds();
+            });
+
+            socket.on('connect', () => {
+                console.log('Socket conectado');
+            });
+
+            socket.on('disconnect', () => {
+                console.log('Socket desconectado');
             });
         }
 
@@ -1015,6 +1032,8 @@
 
         async function loadGroups() {
             try {
+                showNotification('Carregando grupos...', 'warning');
+                
                 const response = await fetch('/api/whatsapp/groups', {
                     method: 'GET',
                     headers: {
@@ -1027,11 +1046,23 @@
                 if (response.ok) {
                     groups = data.groups || [];
                     updateGroupsSelect();
+                    
+                    if (groups.length > 0) {
+                        showNotification(`${groups.length} grupos carregados!`, 'success');
+                    } else {
+                        showNotification('Nenhum grupo encontrado', 'warning');
+                    }
                 } else {
                     console.error('Erro ao carregar grupos:', data.error);
+                    showNotification(data.error || 'Erro ao carregar grupos', 'error');
+                    groups = [];
+                    updateGroupsSelect();
                 }
             } catch (error) {
                 console.error('Erro ao carregar grupos:', error);
+                showNotification('Erro de conexão ao carregar grupos', 'error');
+                groups = [];
+                updateGroupsSelect();
             }
         }
 
@@ -1040,7 +1071,7 @@
             select.innerHTML = '';
             
             if (groups.length === 0) {
-                select.innerHTML = '<option disabled>Nenhum grupo encontrado</option>';
+                select.innerHTML = '<option disabled>Conecte o WhatsApp primeiro</option>';
                 return;
             }
             
@@ -1402,9 +1433,50 @@
         }
 
         async function loadUserData() {
-            loadStats();
-            loadAds();
-            loadGroups();
+            console.log('Carregando dados do usuário...');
+            await loadStats();
+            await loadAds();
+            // Não carregar grupos automaticamente - só quando conectar WhatsApp
+        }
+
+        // Função para testar conexão
+        async function testConnection() {
+            try {
+                const response = await fetch('/api/whatsapp/status', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                console.log('Status da conexão:', data);
+                
+                if (data.connected) {
+                    updateWhatsAppStatus(true);
+                    loadGroups();
+                } else {
+                    updateWhatsAppStatus(false);
+                }
+            } catch (error) {
+                console.error('Erro ao testar conexão:', error);
+            }
+        }
+
+        // Função para testar conexão
+        async function testConnection() {
+            try {
+                const response = await fetch('/api/whatsapp/status', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                console.log('Status da conexão:', data);
+                
+                if (data.connected) {
+                    updateWhatsAppStatus(true);
+                    loadGroups();
+                } else {
+                    updateWhatsAppStatus(false);
+                }
+            } catch (error) {
+                console.error('Erro ao testar conexão:', error);
+            }
         }
 
         // Cleanup on page unload
