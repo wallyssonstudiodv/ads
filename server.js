@@ -1,3 +1,9 @@
+// server.js
+
+// Corrige erro "crypto is not defined"
+const crypto = require('crypto');
+global.crypto = crypto;
+
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
@@ -260,7 +266,6 @@ app.put('/api/ads/:id', authenticateToken, upload.single('image'), async (req, r
 
         db.updateAd(id, updatedAd);
 
-        // Reagendar se necessário
         scheduler.cancelScheduledAd(id);
         if (updatedAd.scheduleDate && updatedAd.scheduleTime && updatedAd.active) {
             scheduler.scheduleAd(updatedAd);
@@ -276,20 +281,19 @@ app.put('/api/ads/:id', authenticateToken, upload.single('image'), async (req, r
 app.delete('/api/ads/:id', authenticateToken, (req, res) => {
     try {
         const { id } = req.params;
-        
         const ad = db.getAd(id);
         if (!ad || ad.userId !== req.user.id) {
             return res.status(404).json({ error: 'Anúncio não encontrado' });
         }
 
         scheduler.cancelScheduledAd(id);
-        
+
         if (ad.image && fs.existsSync(ad.image)) {
             fs.removeSync(ad.image);
         }
 
         db.deleteAd(id);
-        
+
         res.json({ message: 'Anúncio excluído com sucesso' });
     } catch (error) {
         console.error('Erro ao excluir anúncio:', error);
@@ -300,7 +304,6 @@ app.delete('/api/ads/:id', authenticateToken, (req, res) => {
 app.post('/api/ads/:id/toggle', authenticateToken, (req, res) => {
     try {
         const { id } = req.params;
-        
         const ad = db.getAd(id);
         if (!ad || ad.userId !== req.user.id) {
             return res.status(404).json({ error: 'Anúncio não encontrado' });
@@ -324,7 +327,6 @@ app.post('/api/ads/:id/toggle', authenticateToken, (req, res) => {
     }
 });
 
-// Rota de estatísticas
 app.get('/api/stats', authenticateToken, (req, res) => {
     try {
         const ads = db.getUserAds(req.user.id);
@@ -334,7 +336,7 @@ app.get('/api/stats', authenticateToken, (req, res) => {
             totalSent: ads.reduce((sum, ad) => sum + (ad.stats?.sent || 0), 0),
             totalFailed: ads.reduce((sum, ad) => sum + (ad.stats?.failed || 0), 0)
         };
-        
+
         res.json({ stats });
     } catch (error) {
         console.error('Erro ao buscar estatísticas:', error);
@@ -342,16 +344,15 @@ app.get('/api/stats', authenticateToken, (req, res) => {
     }
 });
 
-// Rota para servir imagens
 app.get('/uploads/:userId/:filename', authenticateToken, (req, res) => {
     try {
         const { userId, filename } = req.params;
         const filepath = path.join(__dirname, 'uploads', userId, filename);
-        
+
         if (req.user.id !== userId) {
             return res.status(403).json({ error: 'Acesso negado' });
         }
-        
+
         if (fs.existsSync(filepath)) {
             res.sendFile(filepath);
         } else {
@@ -363,19 +364,18 @@ app.get('/uploads/:userId/:filename', authenticateToken, (req, res) => {
     }
 });
 
-// Rota principal
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Socket.IO para atualizações em tempo real
+// Socket.IO
 io.on('connection', (socket) => {
     console.log('Cliente conectado:', socket.id);
-    
+
     socket.on('join-user', (userId) => {
         socket.join(userId);
     });
-    
+
     socket.on('disconnect', () => {
         console.log('Cliente desconectado:', socket.id);
     });
@@ -390,26 +390,4 @@ async function initializeServices() {
         console.log('Todos os serviços inicializados com sucesso');
     } catch (error) {
         console.error('Erro ao inicializar serviços:', error);
-        process.exit(1);
-    }
-}
-
-// Tratamento de erros não capturados
-process.on('unhandledRejection', (reason, promise) => {
-    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-});
-
-process.on('uncaughtException', (error) => {
-    console.error('Uncaught Exception:', error);
-    process.exit(1);
-});
-
-// Iniciar servidor
-initializeServices().then(() => {
-    server.listen(PORT, () => {
-        console.log(`Servidor WA Divulgações rodando na porta ${PORT}`);
-        console.log(`Acesse: http://localhost:${PORT}`);
-    });
-});
-
-module.exports = app;
+        process.exit(1
