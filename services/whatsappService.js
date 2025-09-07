@@ -10,25 +10,34 @@ const fs = require('fs-extra');
 const path = require('path');
 const QRCode = require('qrcode');
 const sharp = require('sharp');
+const config = require('../config');
 
 class WhatsAppService {
     constructor(io) {
         this.io = io;
         this.connections = new Map();
         this.qrCodes = new Map();
+        this.config = config.whatsapp;
     }
 
     async initialize() {
-        console.log('WhatsApp Service inicializado');
+        console.log('WhatsApp Service inicializado com configurações:', {
+            browser: this.config.browser,
+            timeout: this.config.connectTimeoutMs
+        });
     }
 
     async connectUser(userId) {
         try {
+            // Verificar se já existe uma conexão ativa
             if (this.connections.has(userId)) {
                 const connection = this.connections.get(userId);
-                if (connection.sock && connection.sock.ws.readyState === 1) {
+                if (connection.sock && connection.connected) {
+                    console.log(`Usuário ${userId} já conectado`);
                     return null; // Já conectado
                 }
+                // Limpar conexão antiga se existir
+                this.connections.delete(userId);
             }
 
             const authDir = path.join(__dirname, '..', 'auth', userId);
@@ -38,16 +47,25 @@ class WhatsAppService {
 
             const sock = makeWASocket({
                 auth: state,
-                printQRInTerminal: false,
-                browser: ['WA Divulgações', 'Chrome', '1.0.0'],
-                generateHighQualityLinkPreview: true,
-                defaultQueryTimeoutMs: 60000
+                printQRInTerminal: this.config.printQRInTerminal,
+                browser: this.config.browser,
+                generateHighQualityLinkPreview: this.config.generateHighQualityLinkPreview,
+                defaultQueryTimeoutMs: this.config.defaultQueryTimeoutMs,
+                connectTimeoutMs: this.config.connectTimeoutMs,
+                keepAliveIntervalMs: this.config.keepAliveIntervalMs,
+                retryRequestDelayMs: this.config.retryRequestDelayMs,
+                maxMsgRetryCount: this.config.maxMsgRetryCount,
+                emitOwnEvents: this.config.emitOwnEvents,
+                markOnlineOnConnect: this.config.markOnlineOnConnect
             });
 
             let qrGenerated = false;
+            let connectionPromise;
 
             sock.ev.on('connection.update', async (update) => {
-                const { connection, lastDisconnect, qr } = update;
+                const { connection, lastDisconnect, qr, isOnline, isNewLogin } = update;
+
+                console.log(`Conexão update para ${userId}:`, { connection, isOnline, isNewLogin });
 
                 if (qr && !qrGenerated) {
                     qrGenerated = true;
@@ -55,6 +73,7 @@ class WhatsAppService {
                         const qrString = await QRCode.toDataURL(qr);
                         this.qrCodes.set(userId, qrString);
                         this.io.to(userId).emit('qr-code', qrString);
+                        console.log(`QR Code gerado para usuário ${userId}`);
                     } catch (error) {
                         console.error('Erro ao gerar QR Code:', error);
                     }
@@ -62,64 +81,99 @@ class WhatsAppService {
 
                 if (connection === 'open') {
                     console.log(`WhatsApp conectado para usuário ${userId}`);
-                    this.connections.set(userId, { sock, connected: true });
+                    this.connections.set(userId, { sock, connected: true, userId });
                     this.qrCodes.delete(userId);
+                    
+                    // Emitir evento de conexão
                     this.io.to(userId).emit('whatsapp-connected');
                     
                     // Atualizar status do usuário no banco
-                    const DatabaseService = require('./databaseService');
-                    const db = new DatabaseService();
-                    const user = db.getUser(userId);
-                    if (user) {
-                        db.updateUser(userId, { ...user, whatsappConnected: true });
+                    try {
+                        const DatabaseService = require('./databaseService');
+                        const db = new DatabaseService();
+                        await db.initialize();
+                        const user = db.getUser(userId);
+                        if (user) {
+                            db.updateUser(userId, { ...user, whatsappConnected: true });
+                        }
+                    } catch (dbError) {
+                        console.error('Erro ao atualizar status no banco:', dbError);
                     }
                 }
 
                 if (connection === 'close') {
                     console.log(`WhatsApp desconectado para usuário ${userId}`);
-                    const shouldReconnect = (lastDisconnect?.error)?.output?.statusCode !== DisconnectReason.loggedOut;
+                    
+                    const statusCode = lastDisconnect?.error?.output?.statusCode;
+                    const shouldReconnect = statusCode !== DisconnectReason.loggedOut && 
+                                          statusCode !== DisconnectReason.forbidden;
                     
                     this.connections.delete(userId);
+                    this.qrCodes.delete(userId);
                     this.io.to(userId).emit('whatsapp-disconnected');
 
                     // Atualizar status do usuário no banco
-                    const DatabaseService = require('./databaseService');
-                    const db = new DatabaseService();
-                    const user = db.getUser(userId);
-                    if (user) {
-                        db.updateUser(userId, { ...user, whatsappConnected: false });
+                    try {
+                        const DatabaseService = require('./databaseService');
+                        const db = new DatabaseService();
+                        await db.initialize();
+                        const user = db.getUser(userId);
+                        if (user) {
+                            db.updateUser(userId, { ...user, whatsappConnected: false });
+                        }
+                    } catch (dbError) {
+                        console.error('Erro ao atualizar status no banco:', dbError);
                     }
 
                     if (shouldReconnect) {
-                        console.log('Reconectando WhatsApp...');
-                        setTimeout(() => this.connectUser(userId), 5000);
+                        console.log(`Reconectando WhatsApp em ${this.config.reconnectDelay / 1000} segundos para usuário ${userId}...`);
+                        setTimeout(() => this.connectUser(userId), this.config.reconnectDelay);
+                    } else {
+                        console.log(`Não reconectando usuário ${userId} - logout ou proibido`);
                     }
                 }
             });
 
             sock.ev.on('creds.update', saveCreds);
 
+            // Tratamento de erros
+            sock.ev.on('messages.upsert', () => {
+                // Manter conexão ativa
+            });
+
             // Aguardar QR Code ser gerado ou conexão estabelecida
-            return new Promise((resolve) => {
+            connectionPromise = new Promise((resolve, reject) => {
                 const timeout = setTimeout(() => {
-                    resolve(this.qrCodes.get(userId) || null);
-                }, 10000);
+                    const qr = this.qrCodes.get(userId);
+                    resolve(qr || null);
+                }, this.config.qrTimeout);
 
                 sock.ev.on('connection.update', (update) => {
                     if (update.connection === 'open') {
                         clearTimeout(timeout);
-                        resolve(null);
+                        resolve(null); // Já conectado, não precisa de QR
+                    } else if (update.qr && !qrGenerated) {
+                        clearTimeout(timeout);
+                        resolve(this.qrCodes.get(userId) || null);
                     }
                 });
 
-                sock.ev.on('qr', () => {
+                // Timeout de segurança
+                setTimeout(() => {
                     clearTimeout(timeout);
                     resolve(this.qrCodes.get(userId) || null);
-                });
+                }, this.config.qrTimeout + 5000);
             });
+
+            return await connectionPromise;
 
         } catch (error) {
             console.error(`Erro ao conectar usuário ${userId}:`, error);
+            
+            // Limpar dados em caso de erro
+            this.connections.delete(userId);
+            this.qrCodes.delete(userId);
+            
             throw error;
         }
     }
@@ -152,23 +206,58 @@ class WhatsAppService {
         }
     }
 
+    isUserConnected(userId) {
+        const connection = this.connections.get(userId);
+        if (!connection) return false;
+        
+        // Verificar se a conexão existe e está ativa
+        return connection.connected === true && 
+               connection.sock && 
+               connection.sock.ws && 
+               connection.sock.ws.readyState === 1;
+    }
+
     async getGroups(userId) {
         try {
             const connection = this.connections.get(userId);
-            if (!connection || !connection.sock) {
+            
+            if (!this.isUserConnected(userId) || !connection || !connection.sock) {
                 throw new Error('WhatsApp não conectado');
             }
 
+            // Aguardar um pouco para garantir que a conexão está estável
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
             const groups = await connection.sock.groupFetchAllParticipating();
+            
+            if (!groups) {
+                return [];
+            }
+
             const groupList = Object.values(groups).map(group => ({
                 id: group.id,
-                name: group.subject,
-                participants: group.participants.length
-            }));
+                name: group.subject || 'Grupo sem nome',
+                participants: group.participants ? group.participants.length : 0,
+                description: group.desc || '',
+                owner: group.owner || '',
+                creation: group.creation || 0
+            })).filter(group => group.id && group.name);
 
+            console.log(`${groupList.length} grupos encontrados para usuário ${userId}`);
             return groupList;
+
         } catch (error) {
             console.error(`Erro ao buscar grupos do usuário ${userId}:`, error);
+            
+            // Se o erro for de conexão, tentar reconectar
+            if (error.message.includes('não conectado') || error.message.includes('Connection')) {
+                const connection = this.connections.get(userId);
+                if (connection) {
+                    connection.connected = false;
+                }
+                this.io.to(userId).emit('whatsapp-disconnected');
+            }
+            
             throw error;
         }
     }
@@ -278,11 +367,63 @@ class WhatsAppService {
     }
 
     getUserConnection(userId) {
-        return this.connections.get(userId);
+        return this.connections.get(userId) || null;
     }
 
     getAllConnections() {
         return Array.from(this.connections.keys());
+    }
+
+    // Método para verificar status da conexão
+    async checkConnectionStatus(userId) {
+        try {
+            const connection = this.connections.get(userId);
+            
+            if (!connection || !connection.sock) {
+                return { connected: false, reason: 'No connection object' };
+            }
+
+            if (!connection.sock.ws) {
+                return { connected: false, reason: 'No websocket' };
+            }
+
+            if (connection.sock.ws.readyState !== 1) {
+                return { connected: false, reason: `WebSocket state: ${connection.sock.ws.readyState}` };
+            }
+
+            // Tentar fazer uma operação simples para verificar se realmente está conectado
+            try {
+                await connection.sock.fetchStatus(connection.sock.user.id);
+                return { connected: true };
+            } catch (statusError) {
+                console.error(`Erro ao verificar status para ${userId}:`, statusError);
+                return { connected: false, reason: 'Status check failed' };
+            }
+
+        } catch (error) {
+            console.error(`Erro ao verificar conexão para ${userId}:`, error);
+            return { connected: false, reason: error.message };
+        }
+    }
+
+    // Método para limpar conexões órfãs
+    cleanupConnections() {
+        const toRemove = [];
+        
+        for (const [userId, connection] of this.connections.entries()) {
+            if (!connection.sock || !connection.sock.ws || connection.sock.ws.readyState !== 1) {
+                toRemove.push(userId);
+            }
+        }
+
+        for (const userId of toRemove) {
+            console.log(`Limpando conexão órfã para usuário ${userId}`);
+            this.connections.delete(userId);
+            this.qrCodes.delete(userId);
+            this.io.to(userId).emit('whatsapp-disconnected');
+        }
+
+        return toRemove.length;
     }
 }
 
