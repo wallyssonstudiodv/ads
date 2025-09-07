@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WA Divulgações - Painel de Controle</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #25D366;
+            --secondary-color: #128C7E;
+            --accent-color: #075E54;
+            --warning-color: #FFC107;
+            --danger-color: #DC3545;
+            --dark-color: #1e1e1e;
+            --light-color: #f8f9fa;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--accent-color), var(--secondary-color));
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-weight: bold;
+            font-size: 2rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            background: rgba(255,255,255,0.95);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.15);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            border: none;
+            padding: 1.5rem;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem 2rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(37, 211, 102, 0.3);
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            border: none;
+            border-radius: 8px;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545, #fd7e14);
+            border: none;
+            border-radius: 8px;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107, #fd7e14);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+        }
+
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(37, 211, 102, 0.25);
+        }
+
+        .login-container {
+            max-width: 400px;
+            margin: 10vh auto;
+            padding: 2rem;
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            backdrop-filter: blur(15px);
+        }
+
+        .auth-tabs {
+            margin-bottom: 2rem;
+        }
+
+        .auth-tabs .nav-link {
+            border-radius: 10px;
+            margin: 0 5px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .auth-tabs .nav-link.active {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .whatsapp-status {
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .status-connected {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            color: #155724;
+            border: 2px solid #28a745;
+        }
+
+        .status-disconnected {
+            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+            color: #721c24;
+            border: 2px solid #dc3545;
+        }
+
+        .qr-code {
+            text-align: center;
+            padding: 2rem;
+            background: #fff;
+            border-radius: 15px;
+            margin: 1rem 0;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: scale(1.05);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .ad-card {
+            border: none;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .ad-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .ad-active {
+            border-left: 5px solid var(--primary-color);
+        }
+
+        .ad-inactive {
+            border-left: 5px solid #6c757d;
+            opacity: 0.7;
+        }
+
+        .footer {
+            background: linear-gradient(135deg, var(--dark-color), #333);
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 4rem;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.1);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .slide-in {
+            animation: slideInUp 0.6s ease-out;
+        }
+
+        @keyframes slideInUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            z-index: 9999;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #dc3545, #fd7e14);
+        }
+
+        .notification.warning {
+            background: linear-gradient(135deg, #ffc107, #fd7e14);
+        }
+
+        .modal-content {
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-radius: 15px 15px 0 0;
+            border: none;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 10px;
+            margin-top: 1rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .group-badge {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            margin: 0.2rem;
+            display: inline-block;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .main-container {
+                padding: 0 0.5rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .btn-primary {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(37, 211, 102, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(37, 211, 102, 0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h1><i class="fab fa-whatsapp"></i> WA Divulgações</h1>
+                </div>
+                <div class="col-md-6 text-end" id="userInfo" style="display: none;">
+                    <span class="me-3">Bem-vindo, <strong id="username">Usuário</strong></span>
+                    <button class="btn btn-outline-light btn-sm" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> Sair
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <!-- Tela de Login/Registro -->
+        <div id="authContainer" class="login-container animate__animated animate__fadeIn">
+            <div class="text-center mb-4">
+                <i class="fab fa-whatsapp fa-4x text-success mb-3"></i>
+                <h2 class="mb-0">WA Divulgações</h2>
+                <p class="text-muted">Sistema de Disparador de Anúncios</p>
+            </div>
+
+            <ul class="nav nav-pills auth-tabs justify-content-center" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" data-bs-toggle="pill" href="#login">
+                        <i class="fas fa-sign-in-alt"></i> Entrar
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="pill" href="#register">
+                        <i class="fas fa-user-plus"></i> Registrar
+                    </a>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <!-- Login Form -->
+                <div id="login" class="tab-pane fade show active">
+                    <form id="loginForm" class="mt-4">
+                        <div class="mb-3">
+                            <label for="loginEmail" class="form-label">Email</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                <input type="email" class="form-control" id="loginEmail" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="loginPassword" class="form-label">Senha</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                <input type="password" class="form-control" id="loginPassword" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-sign-in-alt"></i> Entrar
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Register Form -->
+                <div id="register" class="tab-pane fade">
+                    <form id="registerForm" class="mt-4">
+                        <div class="mb-3">
+                            <label for="registerUsername" class="form-label">Nome de Usuário</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                <input type="text" class="form-control" id="registerUsername" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="registerEmail" class="form-label">Email</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                <input type="email" class="form-control" id="registerEmail" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="registerPassword" class="form-label">Senha</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                <input type="password" class="form-control" id="registerPassword" required minlength="6">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-user-plus"></i> Registrar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Painel Principal -->
+        <div id="mainPanel" class="main-container hidden">
+            <!-- Estatísticas -->
+            <div id="statsContainer" class="stats-grid slide-in">
+                <div class="stat-card">
+                    <span class="stat-number" id="totalAds">0</span>
+                    <span class="stat-label">Total de Anúncios</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="activeAds">0</span>
+                    <span class="stat-label">Anúncios Ativos</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="totalSent">0</span>
+                    <span class="stat-label">Mensagens Enviadas</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="totalFailed">0</span>
+                    <span class="stat-label">Mensagens Falharam</span>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Status do WhatsApp -->
+                <div class="col-md-6">
+                    <div class="card slide-in">
+                        <div class="card-header">
+                            <i class="fab fa-whatsapp"></i> Status WhatsApp
+                        </div>
+                        <div class="card-body">
+                            <div id="whatsappStatus" class="whatsapp-status status-disconnected">
+                                <i class="fas fa-times-circle"></i> Desconectado
+                            </div>
+                            
+                            <div id="qrContainer" class="qr-code hidden">
+                                <h5>Escaneie o QR Code</h5>
+                                <img id="qrImage" src="" alt="QR Code" class="img-fluid">
+                                <p class="mt-2 text-muted">Abra o WhatsApp no seu celular e escaneie o código</p>
+                            </div>
+                            
+                            <div class="text-center">
+                                <button id="connectBtn" class="btn btn-success me-2" onclick="connectWhatsApp()">
+                                    <i class="fas fa-link"></i> Conectar
+                                </button>
+                                <button id="disconnectBtn" class="btn btn-danger hidden" onclick="disconnectWhatsApp()">
+                                    <i class="fas fa-unlink"></i> Desconectar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controles Rápidos -->
+                <div class="col-md-6">
+                    <div class="card slide-in">
+                        <div class="card-header">
+                            <i class="fas fa-bullhorn"></i> Controles Rápidos
+                        </div>
+                        <div class="card-body">
+                            <button class="btn btn-primary btn-lg w-100 mb-3 pulse" onclick="showCreateAdModal()">
+                                <i class="fas fa-plus"></i> Criar Novo Anúncio
+                            </button>
+                            <button class="btn btn-warning w-100" onclick="loadGroups()">
+                                <i class="fas fa-sync"></i> Atualizar Grupos
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de Anúncios -->
+            <div class="card slide-in">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-list"></i> Meus Anúncios</span>
+                    <button class="btn btn-outline-light btn-sm" onclick="loadAds()">
+                        <i class="fas fa-sync"></i> Atualizar
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="adsContainer">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <p>Carregando anúncios...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Criar/Editar Anúncio -->
+    <div class="modal fade" id="adModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-bullhorn"></i> <span id="modalTitle">Criar Anúncio</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="adForm" enctype="multipart/form-data">
+                        <input type="hidden" id="adId" name="adId">
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="adTitle" class="form-label">Título do Anúncio *</label>
+                                    <input type="text" class="form-control" id="adTitle" name="title" required maxlength="100">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="adImage" class="form-label">Imagem (opcional)</label>
+                                    <input type="file" class="form-control" id="adImage" name="image" accept="image/*">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="adMessage" class="form-label">Mensagem *</label>
+                            <textarea class="form-control" id="adMessage" name="message" rows="4" required maxlength="1000"></textarea>
+                            <div class="form-text">
+                                <span id="messageCount">0</span>/1000 caracteres
+                            </div>
+                        </div>
+
+                        <div id="imagePreviewContainer" class="mb-3 hidden">
+                            <label class="form-label">Prévia da Imagem</label>
+                            <div class="text-center">
+                                <img id="imagePreview" class="image-preview" src="">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="adGroups" class="form-label">Grupos para Envio *</label>
+                            <select class="form-control" id="adGroups" name="groups" multiple size="6" required>
+                                <option disabled>Carregando grupos...</option>
+                            </select>
+                            <div class="form-text">Use Ctrl+Click para selecionar múltiplos grupos</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="scheduleDate" class="form-label">Data do Agendamento</label>
+                                    <input type="date" class="form-control" id="scheduleDate" name="scheduleDate">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="scheduleTime" class="form-label">Horário do Agendamento</label>
+                                    <input type="time" class="form-control" id="scheduleTime" name="scheduleTime">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="repeatType" class="form-label">Repetição</label>
+                                    <select class="form-control" id="repeatType" name="repeat">
+                                        <option value="once">Apenas uma vez</option>
+                                        <option value="daily">Diariamente</option>
+                                        <option value="weekly">Semanalmente</option>
+                                        <option value="monthly">Mensalmente</option>
+                                        <option value="yearly">Anualmente</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Status</label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="adActive" name="active" checked>
+                                        <label class="form-check-label" for="adActive">
+                                            Anúncio Ativo
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="saveAd()">
+                        <i class="fas fa-save"></i> Salvar Anúncio
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <p class="mb-0">
+                        <i class="fas fa-code"></i> 
+                        Desenvolvido por <strong>Wallysson Studio Dv</strong> © 2025
+                    </p>
+                    <p class="mb-0 mt-2">
+                        <small>Sistema de Disparador de Anúncios WhatsApp - Todos os direitos reservados</small>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center hidden" style="background: rgba(0,0,0,0.7); z-index: 10000;">
+        <div class="text-center text-white">
+            <div class="spinner mb-3"></div>
+            <h4 id="loadingText">Processando...</h4>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    
+    <script>
+        // Variáveis globais
+        let authToken = localStorage.getItem('authToken');
+        let currentUser = null;
+        let socket = null;
+        let groups = [];
+        let ads = [];
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+            setupEventListeners();
+        });
+
+        function initializeApp() {
+            if (authToken) {
+                showMainPanel();
+                initializeSocket();
+                loadUserData();
+            } else {
+                showAuthContainer();
+            }
+        }
+
+        function setupEventListeners() {
+            // Forms de autenticação
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            document.getElementById('registerForm').addEventListener('submit', handleRegister);
+            
+            // Form de anúncio
+            document.getElementById('adForm').addEventListener('submit', saveAd);
+            
+            // Preview de imagem
+            document.getElementById('adImage').addEventListener('change', previewImage);
+            
+            // Contador de caracteres
+            document.getElementById('adMessage').addEventListener('input', updateMessageCount);
+            
+            // Data mínima para agendamento
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('scheduleDate').min = today;
+        }
+
+        // Autenticação
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            showLoading('Entrando...');
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    authToken = data.token;
+                    currentUser = data.user;
+                    localStorage.setItem('authToken', authToken);
+                    
+                    showNotification('Login realizado com sucesso!', 'success');
+                    showMainPanel();
+                    initializeSocket();
+                    loadUserData();
+                } else {
+                    showNotification(data.error || 'Erro ao fazer login', 'error');
+                }
+            } catch (error) {
+                console.error('Erro no login:', error);
+                showNotification('Erro de conexão', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('registerUsername').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            
+            showLoading('Criando conta...');
+            
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    authToken = data.token;
+                    currentUser = data.user;
+                    localStorage.setItem('authToken', authToken);
+                    
+                    showNotification('Conta criada com sucesso!', 'success');
+                    showMainPanel();
+                    initializeSocket();
+                    loadUserData();
+                } else {
+                    showNotification(data.error || 'Erro ao criar conta', 'error');
+                }
+            } catch (error) {
+                console.error('Erro no registro:', error);
+                showNotification('Erro de conexão', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function logout() {
+            authToken = null;
+            currentUser = null;
+            localStorage.removeItem('authToken');
+            
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+            }
+            
+            showAuthContainer();
+            showNotification('Logout realizado com sucesso!', 'success');
+        }
+
+        // Interface
+        function showAuthContainer() {
+            document.getElementById('authContainer').classList.remove('hidden');
+            document.getElementById('mainPanel').classList.add('hidden');
+            document.getElementById('userInfo').style.display = 'none';
+        }
+
+        function showMainPanel() {
+            document.getElementById('authContainer').classList.add('hidden');
+            document.getElementById('mainPanel').classList.remove('hidden');
+            document.getElementById('userInfo').style.display = 'block';
+            
+            if (currentUser) {
+                document.getElementById('username').textContent = currentUser.username;
+            }
+        }
+
+        function showLoading(text = 'Carregando...') {
+            document.getElementById('loadingText').textContent = text;
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'times' : 'exclamation'}-circle"></i>
+                ${message}
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // Socket.IO
+        function initializeSocket() {
+            socket = io();
+            
+            socket.emit('join-user', currentUser.id);
+            
+            socket.on('qr-code', (qr) => {
+                showQRCode(qr);
+            });
+            
+            socket.on('whatsapp-connected', () => {
+                updateWhatsAppStatus(true);
+                loadGroups();
+            });
+            
+            socket.on('whatsapp-disconnected', () => {
+                updateWhatsAppStatus(false);
+            });
+            
+            socket.on('ad-broadcast-result', (data) => {
+                showNotification(`Anúncio enviado: ${data.results.sent} sucessos, ${data.results.failed} falhas`, 'success');
+                loadStats();
+                loadAds();
+            });
+        }
+
+        // WhatsApp
+        async function connectWhatsApp() {
+            showLoading('Conectando WhatsApp...');
+            
+            try {
+                const response = await fetch('/api/whatsapp/connect', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    if (data.qr) {
+                        showQRCode(data.qr);
+                        showNotification('Escaneie o QR Code para conectar', 'warning');
+                    } else {
+                        showNotification(data.message || 'WhatsApp conectado!', 'success');
+                        updateWhatsAppStatus(true);
+                        loadGroups();
+                    }
+                } else {
+                    showNotification(data.error || 'Erro ao conectar WhatsApp', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao conectar WhatsApp:', error);
+                showNotification('Erro de conexão', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function disconnectWhatsApp() {
+            showLoading('Desconectando WhatsApp...');
+            
+            try {
+                const response = await fetch('/api/whatsapp/disconnect', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    updateWhatsAppStatus(false);
+                    showNotification('WhatsApp desconectado!', 'success');
+                } else {
+                    showNotification(data.error || 'Erro ao desconectar WhatsApp', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao desconectar WhatsApp:', error);
+                showNotification('Erro de conexão', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function showQRCode(qr) {
+            document.getElementById('qrImage').src = qr;
+            document.getElementById('qrContainer').classList.remove('hidden');
+        }
+
+        function updateWhatsAppStatus(connected) {
+            const statusDiv = document.getElementById('whatsappStatus');
+            const connectBtn = document.getElementById('connectBtn');
+            const disconnectBtn = document.getElementById('disconnectBtn');
+            
+            if (connected) {
+                statusDiv.className = 'whatsapp-status status-connected';
+                statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> Conectado';
+                connectBtn.classList.add('hidden');
+                disconnectBtn.classList.remove('hidden');
+                document.getElementById('qrContainer').classList.add('hidden');
+            } else {
+                statusDiv.className = 'whatsapp-status status-disconnected';
+                statusDiv.innerHTML = '<i class="fas fa-times-circle"></i> Desconectado';
+                connectBtn.classList.remove('hidden');
+                disconnectBtn.classList.add('hidden');
+                document.getElementById('qrContainer').classList.add('hidden');
+            }
+        }
+
+        async function loadGroups() {
+            try {
+                const response = await fetch('/api/whatsapp/groups', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    groups = data.groups || [];
+                    updateGroupsSelect();
+                } else {
+                    console.error('Erro ao carregar grupos:', data.error);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar grupos:', error);
+            }
+        }
+
+        function updateGroupsSelect() {
+            const select = document.getElementById('adGroups');
+            select.innerHTML = '';
+            
+            if (groups.length === 0) {
+                select.innerHTML = '<option disabled>Nenhum grupo encontrado</option>';
+                return;
+            }
+            
+            groups.forEach(group => {
+                const option = document.createElement('option');
+                option.value = group.id;
+                option.textContent = `${group.name} (${group.participants} membros)`;
+                select.appendChild(option);
+            });
+        }
+
+        // Anúncios
+        function showCreateAdModal() {
+            if (groups.length === 0) {
+                showNotification('Carregue os grupos primeiro!', 'warning');
+                return;
+            }
+            
+            document.getElementById('modalTitle').textContent = 'Criar Anúncio';
+            document.getElementById('adForm').reset();
+            document.getElementById('adId').value = '';
+            document.getElementById('imagePreviewContainer').classList.add('hidden');
+            updateMessageCount();
+            
+            const modal = new bootstrap.Modal(document.getElementById('adModal'));
+            modal.show();
+        }
+
+        function editAd(adId) {
+            const ad = ads.find(a => a.id === adId);
+            if (!ad) return;
+            
+            document.getElementById('modalTitle').textContent = 'Editar Anúncio';
+            document.getElementById('adId').value = ad.id;
+            document.getElementById('adTitle').value = ad.title;
+            document.getElementById('adMessage').value = ad.message;
+            document.getElementById('scheduleDate').value = ad.scheduleDate || '';
+            document.getElementById('scheduleTime').value = ad.scheduleTime || '';
+            document.getElementById('repeatType').value = ad.repeat || 'once';
+            document.getElementById('adActive').checked = ad.active;
+            
+            // Selecionar grupos
+            const groupsSelect = document.getElementById('adGroups');
+            for (let i = 0; i < groupsSelect.options.length; i++) {
+                groupsSelect.options[i].selected = ad.groups.includes(groupsSelect.options[i].value);
+            }
+            
+            // Mostrar imagem se existir
+            if (ad.image) {
+                document.getElementById('imagePreview').src = `/uploads/${currentUser.id}/${ad.image.split('/').pop()}`;
+                document.getElementById('imagePreviewContainer').classList.remove('hidden');
+            }
+            
+            updateMessageCount();
+            
+            const modal = new bootstrap.Modal(document.getElementById('adModal'));
+            modal.show();
+        }
+
+        async function saveAd() {
+            const form = document.getElementById('adForm');
+            const formData = new FormData(form);
+            
+            const selectedGroups = Array.from(document.getElementById('adGroups').selectedOptions)
+                .map(option => option.value);
+            
+            if (selectedGroups.length === 0) {
+                showNotification('Selecione pelo menos um grupo!', 'error');
+                return;
+            }
+            
+            formData.set('groups', JSON.stringify(selectedGroups));
+            
+            const adId = document.getElementById('adId').value;
+            const url = adId ? `/api/ads/${adId}` : '/api/ads';
+            const method = adId ? 'PUT' : 'POST';
+            
+            showLoading('Salvando anúncio...');
+            
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showNotification(`Anúncio ${adId ? 'atualizado' : 'criado'} com sucesso!`, 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('adModal')).hide();
+                    loadAds();
+                    loadStats();
+                } else {
+                    showNotification(data.error || 'Erro ao salvar anúncio', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao salvar anúncio:', error);
+                showNotification('Erro de conexão', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function deleteAd(adId) {
+            if (!confirm('Tem certeza que deseja excluir este anúncio?')) {
+                return;
+            }
+            
+            showLoading('Excluindo anúncio...');
+            
+            try {
+                const response = await fetch(`/api/ads/${adId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showNotification('Anúncio excluído com sucesso!', 'success');
+                    loadAds();
+                    loadStats();
+                } else {
+                    showNotification(data.error || 'Erro ao excluir anúncio', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao excluir anúncio:', error);
+                showNotification('Erro de conexão', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function toggleAd(adId) {
+            showLoading('Atualizando status...');
+            
+            try {
+                const response = await fetch(`/api/ads/${adId}/toggle`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showNotification(data.message, 'success');
+                    loadAds();
+                    loadStats();
+                } else {
+                    showNotification(data.error || 'Erro ao alterar status', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao alterar status:', error);
+                showNotification('Erro de conexão', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function loadAds() {
+            const container = document.getElementById('adsContainer');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div><p>Carregando anúncios...</p></div>';
+            
+            try {
+                const response = await fetch('/api/ads', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    ads = data.ads || [];
+                    renderAds();
+                } else {
+                    container.innerHTML = `<div class="alert alert-danger">Erro ao carregar anúncios: ${data.error}</div>`;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar anúncios:', error);
+                container.innerHTML = '<div class="alert alert-danger">Erro de conexão</div>';
+            }
+        }
+
+        function renderAds() {
+            const container = document.getElementById('adsContainer');
+            
+            if (ads.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-bullhorn fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Nenhum anúncio criado ainda</h5>
+                        <p class="text-muted">Clique em "Criar Novo Anúncio" para começar</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            ads.forEach(ad => {
+                const adCard = document.createElement('div');
+                adCard.className = `ad-card card ${ad.active ? 'ad-active' : 'ad-inactive'}`;
+                
+                const nextSchedule = getNextScheduleText(ad);
+                const groupNames = ad.groups.map(groupId => {
+                    const group = groups.find(g => g.id === groupId);
+                    return group ? group.name : 'Grupo não encontrado';
+                });
+                
+                adCard.innerHTML = `
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h5 class="card-title">
+                                    ${ad.title}
+                                    ${ad.active ? '<span class="badge bg-success ms-2">Ativo</span>' : '<span class="badge bg-secondary ms-2">Inativo</span>'}
+                                </h5>
+                                <p class="card-text">${ad.message.substring(0, 100)}${ad.message.length > 100 ? '...' : ''}</p>
+                                <div class="mb-2">
+                                    <small class="text-muted">
+                                        <i class="fas fa-users"></i> Grupos: ${groupNames.length}
+                                    </small>
+                                </div>
+                                <div class="mb-2">
+                                    ${groupNames.slice(0, 3).map(name => `<span class="group-badge">${name}</span>`).join('')}
+                                    ${groupNames.length > 3 ? `<span class="group-badge">+${groupNames.length - 3} mais</span>` : ''}
+                                </div>
+                                ${nextSchedule ? `<div class="mb-2"><small class="text-info"><i class="fas fa-clock"></i> ${nextSchedule}</small></div>` : ''}
+                                <div class="mb-2">
+                                    <small class="text-success">
+                                        <i class="fas fa-check"></i> Enviadas: ${ad.stats?.sent || 0}
+                                    </small>
+                                    <small class="text-danger ms-3">
+                                        <i class="fas fa-times"></i> Falharam: ${ad.stats?.failed || 0}
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                ${ad.image ? `<img src="/uploads/${currentUser.id}/${ad.image.split('/').pop()}" class="img-thumbnail mb-2" style="max-width: 100px;">` : ''}
+                                <div class="btn-group-vertical d-grid gap-1">
+                                    <button class="btn btn-outline-primary btn-sm" onclick="editAd('${ad.id}')">
+                                        <i class="fas fa-edit"></i> Editar
+                                    </button>
+                                    <button class="btn btn-outline-${ad.active ? 'warning' : 'success'} btn-sm" onclick="toggleAd('${ad.id}')">
+                                        <i class="fas fa-${ad.active ? 'pause' : 'play'}"></i> ${ad.active ? 'Pausar' : 'Ativar'}
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm" onclick="deleteAd('${ad.id}')">
+                                        <i class="fas fa-trash"></i> Excluir
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(adCard);
+            });
+        }
+
+        function getNextScheduleText(ad) {
+            if (!ad.scheduleDate || !ad.scheduleTime || !ad.active) {
+                return null;
+            }
+            
+            const scheduleDate = new Date(`${ad.scheduleDate}T${ad.scheduleTime}`);
+            const now = new Date();
+            
+            if (ad.repeat === 'once' && scheduleDate < now) {
+                return 'Agendamento expirado';
+            }
+            
+            const options = { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric', 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            };
+            
+            let nextText = `Próximo envio: ${scheduleDate.toLocaleDateString('pt-BR', options)}`;
+            
+            if (ad.repeat !== 'once') {
+                const repeatText = {
+                    daily: 'diariamente',
+                    weekly: 'semanalmente', 
+                    monthly: 'mensalmente',
+                    yearly: 'anualmente'
+                };
+                nextText += ` (${repeatText[ad.repeat]})`;
+            }
+            
+            return nextText;
+        }
+
+        // Estatísticas
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    updateStatsDisplay(data.stats);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar estatísticas:', error);
+            }
+        }
+
+        function updateStatsDisplay(stats) {
+            document.getElementById('totalAds').textContent = stats.totalAds || 0;
+            document.getElementById('activeAds').textContent = stats.activeAds || 0;
+            document.getElementById('totalSent').textContent = stats.totalSent || 0;
+            document.getElementById('totalFailed').textContent = stats.totalFailed || 0;
+        }
+
+        // Utilitários
+        function previewImage(e) {
+            const file = e.target.files[0];
+            const container = document.getElementById('imagePreviewContainer');
+            const preview = document.getElementById('imagePreview');
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    container.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
+        function updateMessageCount() {
+            const textarea = document.getElementById('adMessage');
+            const counter = document.getElementById('messageCount');
+            counter.textContent = textarea.value.length;
+            
+            if (textarea.value.length > 900) {
+                counter.classList.add('text-warning');
+            } else {
+                counter.classList.remove('text-warning');
+            }
+        }
+
+        async function loadUserData() {
+            loadStats();
+            loadAds();
+            loadGroups();
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            if (socket) {
+                socket.disconnect();
+            }
+        });
+    </script>
+</body>
+</html>
