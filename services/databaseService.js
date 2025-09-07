@@ -21,6 +21,64 @@ class DatabaseService {
             await this.loadData();
             console.log('Database Service inicializado');
         } catch (error) {
+            console.error('Erro ao inicializar Database Service:', error);
+            throw error;
+        }
+    }
+
+    async loadData() {
+        try {
+            // Carregar usuários
+            if (await fs.pathExists(this.usersFile)) {
+                this.users = await fs.readJson(this.usersFile);
+            } else {
+                this.users = [];
+                await this.saveUsers();
+            }
+
+            // Carregar anúncios
+            if (await fs.pathExists(this.adsFile)) {
+                this.ads = await fs.readJson(this.adsFile);
+            } else {
+                this.ads = [];
+                await this.saveAds();
+            }
+
+            // Carregar estatísticas
+            if (await fs.pathExists(this.statsFile)) {
+                this.stats = await fs.readJson(this.statsFile);
+            } else {
+                this.stats = {};
+                await this.saveStats();
+            }
+
+            // Carregar configurações
+            if (await fs.pathExists(this.settingsFile)) {
+                this.settings = await fs.readJson(this.settingsFile);
+            } else {
+                this.settings = {
+                    antiSpam: {
+                        enabled: true,
+                        maxMessagesPerHour: 10,
+                        cooldownMinutes: 60
+                    },
+                    scheduler: {
+                        timezone: 'America/Sao_Paulo'
+                    }
+                };
+                await this.saveSettings();
+            }
+
+        } catch (error) {
+            console.error('Erro ao carregar dados:', error);
+            throw error;
+        }
+    }
+
+    async saveUsers() {
+        try {
+            await fs.writeJson(this.usersFile, this.users, { spaces: 2 });
+        } catch (error) {
             console.error('Erro ao salvar usuários:', error);
             throw error;
         }
@@ -338,62 +396,4 @@ class DatabaseService {
     }
 }
 
-module.exports = DatabaseService;Erro ao inicializar Database Service:', error);
-            throw error;
-        }
-    }
-
-    async loadData() {
-        try {
-            // Carregar usuários
-            if (await fs.pathExists(this.usersFile)) {
-                this.users = await fs.readJson(this.usersFile);
-            } else {
-                this.users = [];
-                await this.saveUsers();
-            }
-
-            // Carregar anúncios
-            if (await fs.pathExists(this.adsFile)) {
-                this.ads = await fs.readJson(this.adsFile);
-            } else {
-                this.ads = [];
-                await this.saveAds();
-            }
-
-            // Carregar estatísticas
-            if (await fs.pathExists(this.statsFile)) {
-                this.stats = await fs.readJson(this.statsFile);
-            } else {
-                this.stats = {};
-                await this.saveStats();
-            }
-
-            // Carregar configurações
-            if (await fs.pathExists(this.settingsFile)) {
-                this.settings = await fs.readJson(this.settingsFile);
-            } else {
-                this.settings = {
-                    antiSpam: {
-                        enabled: true,
-                        maxMessagesPerHour: 10,
-                        cooldownMinutes: 60
-                    },
-                    scheduler: {
-                        timezone: 'America/Sao_Paulo'
-                    }
-                };
-                await this.saveSettings();
-            }
-
-        } catch (error) {
-            console.error('Erro ao carregar dados:', error);
-            throw error;
-        }
-    }
-
-    async saveUsers() {
-        try {
-            await fs.writeJson(this.usersFile, this.users, { spaces: 2 });
-        } catch (error) {
-            console.error('
+module.exports = DatabaseService;
