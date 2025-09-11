@@ -684,7 +684,7 @@ class WhatsAppBotPanel {
     }
     
     startServer() {
-        const PORT = process.env.PORT || 3000;
+        const PORT = process.env.PORT || 8080;
         this.server.listen(PORT, () => {
             console.log(`🚀 Painel WhatsApp rodando em http://localhost:${PORT}`);
             console.log(`📱 Acesse o painel web para gerenciar o bot`);
